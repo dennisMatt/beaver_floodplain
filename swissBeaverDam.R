@@ -259,35 +259,45 @@ rangerForm<-pres~streamPower+width+gradient+terrainSlope+minSlope+pasture100+urb
 
 for (i in folds) {
   
-  #select fold
+  #select fold - select all folds which are not 'i' to train the model
   fishNetTrain<-subset(fishnet_grid_Fin,fishnet_grid_Fin$grid_id!=i)
   
   #spatially subset the training data
-  train <- st_intersection(fishNetTrain, dfST)#for presence values, select all folds which are not 'i' to train the model
+  train <- st_intersection(fishNetTrain, dfST)
   
-  #spatially subset the test data
+  #spatially subset the test data 
   fishNetTest<-subset(fishnet_grid_Fin,fishnet_grid_Fin$grid_id==i)
   test <- st_intersection(fishNetTest, dfST)  
+  
+  #get N for training and testing to assign as weights later
   nPresTrain<-nrow(train[train$pres==1,])
   nBackTrain<-nrow(train[train$pres==0,])
   
   #rangerForm
   rfGeo<-ranger(formula = rangerForm,case.weights=(nPresTrain/nBackTrain)^(1-train$pres),data = as.data.frame(train), num.trees = 500, mtry = 2,min.node.size = 10)
-  
+
+  #make a prediction
   pred <- predict(rfGeo, as.data.frame(test),type="response")
-  
+
+  #use precrec to calculate roc curves
   precrec_proc <- evalmod(scores = pred$predictions,labels = test$pres,mode = "prcroc")
-  
+
+  #inspect
   plot(precrec_proc)
- 
+
+  #get auc value
   modauc <- precrec::auc(precrec::evalmod(scores = pred$predictions, 
                                           labels = test$pres))
+  #track
   print(i)
+
+  #add to list
   rfK[[i]] <- modauc$aucs[1]
   
   
 }
 
+#print mean auc
 mean(unlist(rfK))  
 
 
@@ -301,44 +311,50 @@ par(mfrow=c(2,3))
 
 for (i in folds) {
   
-  
+
+#select fold - select all folds which are not 'i' to train the model
   fishNetTrain<-subset(fishnet_grid_Fin,fishnet_grid_Fin$grid_id!=i)
   
-  train <- st_intersection(fishNetTrain, dfST)#for presence values, select all folds which are not 'i' to train the model
+  #spatially subset the training data
+  train <- st_intersection(fishNetTrain, dfST)
   
-  
+  #spatially subset the test data 
   fishNetTest<-subset(fishnet_grid_Fin,fishnet_grid_Fin$grid_id==i)
+  test <- st_intersection(fishNetTest, dfST)  
   
-  test <- st_intersection(fishNetTest, dfST) 
+  #get N for training and testing to assign as weights later
+  nPresTrain<-nrow(train[train$pres==1,])
+  nBackTrain<-nrow(train[train$pres==0,])
   
-  nPres<-nrow(train[train$pres==1,])
-  
-  nBack<-nrow(train[train$pres==0,])
-  
-  
+  #build model
   glmGeo<-glm(pres~streamPower+poly(width,2)+gradient+terrainSlope+minSlope
               +poly(pasture100,2)+poly(urban100,2)+poly(wood100,4),family = "quasibinomial",weights=(nPres/nBack)^(1-pres),
               data=train)
   
-  
+
+  #make prediction
   pred <- predict(glmGeo, as.data.frame(test),type="response")
-  
+
+  #use precrec to get roc curves
   precrec_proc <- evalmod(scores = pred,labels = test$pres,mode = "prcroc")
-  
+
+
+  #inspect
   plot(precrec_proc)
-  
-  predValsCurve <- roc(test$pres, pred)
  
-  
+  #get auc value
   modauc <- precrec::auc(precrec::evalmod(scores = pred, 
                                           labels = test$pres))
-  
+
+  #add to list
   glmK[[i]] <- modauc$aucs[1]
-  
+
+  #track
   print(i)
   
 }
 
+#print mean auc
 mean(unlist(glmK),rm.na=T)
 
 
