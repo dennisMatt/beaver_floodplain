@@ -1,9 +1,12 @@
 
 ####################Script for processing beaver dam location data, river characteristics and dam probability model
 
+#load libraries
+#spatial
 library(sf)
 
 library(terra)
+#data handling
 library(dplyr)
 
 
@@ -399,7 +402,7 @@ for (i in folds) {
   #plot
   plot(proc_df$Specificity,proc_df$Sensitivity)
   
-  #isolate threshold as that which maximises sensitivity and minimises specificity
+  #isolate threshold as that which maximises sensitivity and maximises specificity
   TrMax<-proc_df[which.max(proc_df$Sensitivity-proc_df$Specificity),]
   
   TrMax=TrMax$Tr
@@ -415,5 +418,5 @@ for (i in folds) {
 
 mean(unlist(glmTr))
 
-
+#TODO ggplot response plotss
 
