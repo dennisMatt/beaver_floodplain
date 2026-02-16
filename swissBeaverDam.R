@@ -53,7 +53,6 @@ dfPoint$pres<-as.numeric(dfPoint$pres)
 
 dfPoint$A<-as.numeric(dfPoint$A)
 
-x
 
 #set up data frame to hold results - this section needed in case a dam intersects more than one stream
 
