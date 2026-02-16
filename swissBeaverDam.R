@@ -4,8 +4,9 @@
 library(sf)
 
 library(terra)
+library(dplyr)
 
-#load river network
+
 rivJoinedData<-st_read("rivDataBafu.shp")
 
 head(rivJoinedData)
@@ -49,8 +50,7 @@ dfPoint$pres<-as.numeric(dfPoint$pres)
 
 dfPoint$A<-as.numeric(dfPoint$A)
 
-#for data handling
-library(dplyr)
+x
 
 #set up data frame to hold results - this section needed in case a dam intersects more than one stream
 
